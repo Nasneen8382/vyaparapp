@@ -1,0 +1,361 @@
+<!-- create by nasneen -->
+
+{% extends 'staff/staffbase.html' %}
+{% block content %}
+{% load static %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+
+
+<style>
+    .table,
+    .form-control,
+    label,
+    .btn {
+        font-size: 0.8em;
+    }
+
+    table tr td:hover {
+        cursor: pointer;
+    }
+
+
+
+    .bar .left {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .form-control {
+        background-color: white;
+    }
+</style>
+
+<div style="background-color: rgba(176, 199, 205, 0.4);">
+
+    <!-- <div class="d-flex justify-content-between">
+        <p class="tb fw-bolder fs-2"><span class="fa fa-share ps-1 tb"></span></p>
+        <button class="btn btn-sm btn-primary fs-2" data-bs-toggle="modal"
+            data-bs-target="#myModal1" data-bs-whatever="@getbootstrap" hx-get=""
+            hx-trigger="click delay:0s" hx-target="#item_get_details_for_modal_target"><span
+                class="fa fa-sliders-h pe-1"></span> ADJUSTMENT ITEM</button>
+    </div> -->
+
+    <div class="body-wrapper">
+        <div class="container-fluid">
+
+
+            {% if sale %}
+            <div class="col-sm-12 col-lg-12 ">
+                <div id="item_get_detail_target">
+                    <div class="row m-0" style="height:20%">
+                        <div class="card bg-light bs p-3 mb-3">
+                            <!-- <center class="mt-3">
+                                <h2 class="text-center"><b
+                                        style="color: rgb(255, 255, 255);text-shadow: 2px 2px 4px #000000; margin-bottom: 40px;">SALE
+                                        ORDER</b></h2>
+
+                            </center> -->
+                            <div class="bar d-flex justify-content-between">
+                                <div class=" left">
+                                    <div class="px-2">
+                                        <label style="text-align:left ">From</label><br>
+                                        <input name="FromDate" class="inputdate form-control" type="date" id="in1">
+                                    </div>
+
+                                    <div class="px-2">
+                                        <label style="text-align:left ">To</label><br>
+                                        <input name="ToDate" type="date" class="inputdate form-control" id="in2">
+                                    </div>
+
+
+                                </div>
+                                <div class="right mt-3">
+                                    <a class="btn p-0 ps-2 pe-2 ms-2" title="export to excel"
+                                        onclick="exportAsExcel()"><span><img width="25px"
+                                                src="{% static 'assets/excel2.png' %}" alt="no img"></span></a>
+
+                                    <label for="file-input" title="impot excel" class="btn p-0 ps-2 pe-2 ms-2" type="button"><span><img
+                                                width="25px" src="{% static 'assets/import.png' %}"
+                                                alt="no img"></span></label>
+                                    <input id="file-input" type="file" name="file" style="display:none;"
+                                        onchange="uploadFile()">
+
+                                    <a class="btn btn_print p-0 ps-2 pe-2 ms-2" title="print"><span><img width="25px" src="{% static 'assets/printer.jpg' %}" alt="no img"></span></a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = cookies[i].trim();
+                            // Check if the cookie name matches the CSRF cookie name
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                function uploadFile() {
+                    const fileInput = document.getElementById("file-input");
+                    const file = fileInput.files[0];
+                    const csrfToken = getCookie('csrftoken')
+                    
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    fetch("/import_excel", {
+                        method: "POST",
+                        headers: { 'X-CSRFToken': csrfToken },
+                        body: formData
+                    })
+                    window.location.href = '/sale_order';
+                        
+
+                }
+            </script>
+
+            <div class="row pt-0 m-0">
+                <div class="card p-0 bg-light" style="min-height: 60vh;">
+                    <div class="row m-0 p-0 pt-3">
+                        <div class="col-sm-12 col-lg-3">
+                            <p class="tb fw-bolder pt-2">SALE ORDER</p>
+                            <div class="pt-2">
+                                <div class="position-relative">
+                                    <div class="position-absolute" style="margin-top:0.4rem;margin-left: 0.5rem;">
+                                        <span class="fa fa-search fs-5 text-info"></span>
+                                    </div>
+                                </div>
+                                <input id="search_input1" style="padding-inline-start: 2rem;"
+                                    class="w-100 border-secondary text-dark pt-1 pb-1 rounded" type="text"
+                                    placeholder=" search here..">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-lg-7">
+
+                        </div>
+
+                        <div class="col-sm-12 col-lg-2 pt-1">
+
+                            <div class="d-flex mt-5">
+                                <a class="btn btn-secondary" href="{% url 'saleorder_create' %}"><i class="fa fa-plus"
+                                        aria-hidden="true"></i> CREATE SALE
+                                    ORDER</a>
+
+                            </div>
+                        </div>
+                        <div class="mt-3"  id="content-div">
+                            <table id="myTable"
+                                class="table table-bordered table-info table-hover  tb table-responsive w-100">
+                                <thead>
+                                    <th>#</th>
+                                    <th class="text-center fs-2">PARTY NAME <span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center fs-2">NUMBER <span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center fs-2">DATE <span class="fa fa-filter ps-1 fs-1"></span></th>
+                                    <th class="text-center fs-2">DUE DATE <span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center fs-2">TOTAL<span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center fs-2">BALANCE<span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center fs-2">TYPE<span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center fs-2">STATUS<span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center fs-2">ACTION<span class="fa fa-filter ps-1 fs-1"></span>
+                                    </th>
+                                    <th class="text-center p-0 m-0"></th>
+                                </thead>
+                                <tbody>
+                                    {% for i in sale %}
+                                    <tr>
+                                        <td>{{forloop.counter }}</td>
+                                        <td>{{i.partyname}}</td>
+                                        <td>{{i.orderno}}</td>
+                                        <td>{{i.orderdate}}</td>
+                                        <td>{{i.duedate}}</td>
+                                        <td>{{i.grandtotal}}</td>
+                                        <td>{{i.balance}}</td>
+                                        <td>sale order</td>
+                                        <td
+                                            class="{% if i.status == 'open' %}text-primary{% else %}text-success{% endif %} text-center">
+                                            {{i.status}}</td>
+                                        <td><a href="">{{i.action}}</a> </td>
+                                        <td>
+                                            <div class="btn-group mb-1">
+                                                <button style="border: none;background: none;" type="button"
+                                                    class="ropdown-toggle dropdown-toggle-split"
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="fa fa-ellipsis-v text-dark fs-1 ps-2"></span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item fw-bold tb"
+                                                            href="{% url 'saleorder_view' i.id %}"><span
+                                                                class="fa fa-eye pe-2 tg text-primary"></span> View</a>
+                                                    </li>
+                                                    <li><a class="dropdown-item fw-bold tb"
+                                                            href="{% url 'saleorder_view' i.id %}"><span
+                                                                class="fa fa-edit pe-2 tg text-secondary"></span>
+                                                            Edit</a></li>
+
+                                                    <li><a class="dropdown-item fw-bold tb" type="button"
+                                                            href="{% url 'delete_saleorder' i.id %}"><span
+                                                                class="fa fa-trash-alt tr text-danger"
+                                                                style="padding-inline-start: 0.1rem;padding-inline-end:0.7rem ;"></span>
+                                                            Delete</a></li>
+                                                    <li><a class="dropdown-item fw-bold tb"
+                                                            href="{% url 'saleorder_view' i.id %}"><span
+                                                                class="fa fa-history pe-2 tg text-success"></span>History</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <div class="row empty mx-2" >
+                <div class="card bg-light"  style="justify-content: center;align-items: center; padding: 5vh;">
+                    <div class="text-center mb-3">
+                        
+                    </div>
+                    <div class="emptyimg">
+                        
+                        
+                        <img class="img-fluid" src="{% static 'images/supermarketimg3.png' %}" alt="" width="250em">
+                        <div class="text-center ">
+                            
+
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+
+                        <h5 class="text-info">Create sale orders & convert them to sale invoice instantly.</h5>
+                        <a class="btn btn-secondary fs-2 mt-3" href="{% url 'saleorder_create' %}"><i class="fa fa-plus"
+                            aria-hidden="true"></i>   ADD FIRST SALE ORDER</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+    // jQuery(document).ready(function ($) {
+    //     $(".clickable-row").click(function () {
+    //         window.location = $(this).data("href");
+    //     });
+    // });
+    jQuery(document).ready(function ($) {
+        $("#search_input1").on("keyup", function () {
+            var value = $(this).val().toLowerCase();
+            $("#myTable tbody tr").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+        $(document).on('click', '.btn_print', function (event) {
+            $('#myTable').removeClass('table-hover');
+            var printContents = document.getElementById("content-div").innerHTML;
+            var originalContents = document.body.innerHTML;
+
+            document.body.innerHTML = printContents;
+
+            window.print();
+
+            document.body.innerHTML = originalContents;
+
+            $('#myTable').addClass('table-hover');
+
+        });
+    });
+
+    var table = document.getElementById("myTable");
+
+    var fromDate;
+    $('#in1').on('change', function () {
+        fromDate = $(this).val();
+        $('#in2').prop('min', function () {
+            return fromDate
+        });
+        var startDate = new Date(document.getElementById("in1").value);
+        var endDate = new Date(document.getElementById("in2").value);
+        var rows = table.getElementsByTagName("tr")
+
+        console.log(startDate);
+        for (var i = 1; i < rows.length; i++) {
+            var row = rows[i];
+            var dateCell = row.cells[3];
+            var rowDate = new Date(dateCell.textContent);
+
+            if ((rowDate >= startDate) || (rowDate <= endDate && rowDate >= startDate)) {
+                row.style.display = "";
+
+            } else {
+                row.style.display = "none";
+
+            }
+        }
+
+
+
+        // var tdate = new Date(fromDate)
+        // var options = { year: 'numeric', month: 'long', day: 'numeric' };
+        // document.getElementById("d1").innerHTML = tdate.toLocaleDateString(undefined, options);
+
+    });
+    var toDate;
+    $('#in2').on('change', function () {
+        toDate = $(this).val();
+        $('#in1').prop('max', function () {
+            return toDate
+        })
+        var startDate = new Date(document.getElementById("in1").value);
+        var endDate = new Date(document.getElementById("in2").value);
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+            var row = rows[i];
+            var dateCell = row.cells[3];
+            var rowDate = new Date(dateCell.textContent);
+            if (rowDate <= endDate && rowDate >= startDate) {
+                row.style.display = "";
+
+            } else {
+                row.style.display = "none";
+
+            }
+        }
+        // var tdate = new Date(toDate)
+        // var options = { year: 'numeric', month: 'long', day: 'numeric' };
+        // document.getElementById("d2").innerHTML = "  To  " + tdate.toLocaleDateString(undefined, options);
+
+    })
+    function exportAsExcel() {
+        console.log("myTable");
+        const table = document.getElementById('myTable'); // Replace 'myTable' with your table's ID
+        const wb = XLSX.utils.table_to_book(table);
+
+        XLSX.writeFile(wb, 'parties.xlsx');
+    }
+</script>
+
+{% endblock content %}
