@@ -13,6 +13,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.template.response import TemplateResponse
 
+import pandas as pd
+
 
 # Create your views here.
 def home(request):
@@ -112,8 +114,8 @@ def estimate_quotation(request):
 def payment_in(request):
   return render(request, 'payment_in.html')
     
-def sale_order(request):
-  return render(request, 'sale_order.html')
+# def sale_order(request):
+#   return render(request, 'sale_order.html')
 
 def delivery_chellan(request):
   return render(request, 'delivery_chellan.html')
@@ -1186,7 +1188,7 @@ def adminhome(request):
 
 
 def sale_order(request):
-  sale = salesorder.objects.all()
+  
   if 'staff_id' in request.session:
     if request.session.has_key('staff_id'):
       staff_id = request.session['staff_id']
@@ -1194,8 +1196,15 @@ def sale_order(request):
     else:
       return redirect('/')
   staff =  staff_details.objects.get(id=staff_id)
+  sale = salesorder.objects.filter(staff=staff)
+  for i in sale:
+      last = sale_transaction.objects.filter(staff=i.staff).latest('date')
+      i.last= last.action
+      i.by=last.staff
+      
+
   context={
-    'sale':sale,'staff':staff,
+    'sale':sale,'staff':staff
   }
   return render(request, 'sale_order.html',context)
 
@@ -1207,7 +1216,7 @@ def saleorder_create(request):
     else:
       return redirect('/')
   staff =  staff_details.objects.get(id=staff_id)
-  # cmp = company.objects.get(user=request.user)
+  cmp = staff.company
   par= party.objects.filter(company=staff.company)
   item = ItemModel.objects.filter(company=staff.company)
   order = salesorder.next_orderno()
@@ -1258,7 +1267,7 @@ def create_saleorder(request):
   if request.method == 'POST':
     prty = request.POST.get('party')
     # staff =  staff_details.objects.get(id=staff_id)
-    cmp= company.objects.get(user=request.user)
+    cmp= staff.company
     payment = request.POST.get('paymethode')
     pos=request.POST.get('stateofsply')
     attach=request.FILES.get('attach')       
@@ -1281,7 +1290,8 @@ def create_saleorder(request):
       paid=request.POST.get('paid'),
       balance=request.POST.get('baldue'),
       file=attach,
-      staff=staff
+      staff=staff,
+      comp=cmp,
       
 
     )
@@ -1333,9 +1343,14 @@ def create_saleorder(request):
         print("item saved===================================")
       
       tran= sale_transaction(
-        sa,staff=staff,company=cmp,
+        sales_order=salesorderid,staff=staff,company=cmp,action="Created",date=date.today()
       )
-    return redirect('sale_order')
+      tran.save()
+    if request.POST.get('save_and_next'):
+      return redirect('saleorder_create')
+    elif request.POST.get('save'):
+      return redirect('sale_order')
+    
   return redirect('sale_order')
       
       
@@ -1370,11 +1385,14 @@ def delete_saleorder(request,id):
   
 def import_excel(request):
     if request.method == "POST" and request.FILES.get("file"):
+      staff_id = request.session['staff_id']
+      staff =  staff_details.objects.get(id=staff_id)
       print("open============================================")
       excel_file = request.FILES['file']
       if excel_file.name.endswith('.xlsx'):
         df = pd.read_excel(excel_file, engine='openpyxl')
         for index, row in df.iterrows():
+          print(row['PARTY NAME'])
           salesorder.objects.create(
                     partyname=row['PARTY NAME'],
                     orderno=row['NUMBER'],
@@ -1384,6 +1402,8 @@ def import_excel(request):
                     balance=row['BALANCE'],
                     status=row['STATUS'],
                     action=row['ACTION'],
+                    staff=staff,
+                    comp=staff.company,
                     # Add other fields accordingly
                 )
         print("success============================================")
@@ -1392,3 +1412,97 @@ def import_excel(request):
     return redirect('sale_order')
   
   
+def add_party(request):
+  if request.method == 'POST':
+        Company = company.objects.get(user=request.user)
+        user_id = request.user.id
+        
+        party_name = request.POST['partyname']
+        gst_no = request.POST['gstno']
+        contact = request.POST['contact']
+        gst_type = request.POST['gst']
+        state = request.POST['state']
+        address = request.POST['address']
+        email = request.POST['email']
+        openingbalance = request.POST.get('balance', '')
+        payment = request.POST.get('paymentType', '')
+        creditlimit = request.POST.get('creditlimit', '')
+        current_date = request.POST['currentdate']
+        End_date = request.POST.get('enddate', None)
+        additionalfield1 = request.POST['additionalfield1']
+        additionalfield2 = request.POST['additionalfield2']
+        additionalfield3 = request.POST['additionalfield3']
+        user=User.objects.get(id=user_id)
+        comp=Company
+        if (
+          not party_name
+          
+      ):
+          return render(request, 'add_parties.html')
+
+        part = party(party_name=party_name, gst_no=gst_no,contact=contact,gst_type=gst_type, state=state,address=address, email=email, openingbalance=openingbalance,payment=payment,
+                       creditlimit=creditlimit,current_date=current_date,End_date=End_date,additionalfield1=additionalfield1,additionalfield2=additionalfield2,additionalfield3=additionalfield3,user=user,company=comp)
+        part.save() 
+
+        options = {}
+        option_objects = party.objects.filter(user=request.user)
+        for option in option_objects:
+            options[option.id] = [option.party_name]
+        return JsonResponse(options) 
+  else:
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+  
+def add_item(request):
+  if request.method=='POST':
+    user = User.objects.get(id=request.user.id)
+    company_user_data = company.objects.get(user=request.user.id)
+    item_name = request.POST.get('item_name')
+    item_hsn = request.POST.get('item_hsn')
+    item_unit = request.POST.get('item_unit')
+    item_taxable = request.POST.get('item_taxable')
+    item_gst = request.POST.get('item_gst')
+    item_igst = request.POST.get('item_igst')
+    item_sale_price = request.POST.get('item_sale_price')
+    item_purchase_price = request.POST.get('item_purchase_price')
+    item_opening_stock = request.POST.get('item_opening_stock')
+    item_current_stock = item_opening_stock
+    if item_opening_stock == '' or None :
+      item_opening_stock = 0
+      item_current_stock = 0
+    item_at_price = request.POST.get('item_at_price')
+    if item_at_price == '' or None:
+      item_at_price =0
+    item_date = request.POST.get('item_date')
+    item_min_stock_maintain = request.POST.get('item_min_stock_maintain')
+    if item_min_stock_maintain == ''  or None:
+      item_min_stock_maintain = 0
+    item_data = ItemModel(user=user,
+                          company=company_user_data,
+                          item_name=item_name,
+                          item_hsn=item_hsn,
+                          item_unit=item_unit,
+                          item_taxable=item_taxable,
+                          item_gst=item_gst,
+                          item_igst=item_igst,
+                          item_sale_price=item_sale_price,
+                          item_purchase_price=item_purchase_price,
+                          item_opening_stock=item_opening_stock,
+                          item_current_stock=item_current_stock,
+                          item_at_price=item_at_price,
+                          item_date=item_date,
+                          item_min_stock_maintain=item_min_stock_maintain)
+    item_data.save()
+    options = {}
+    option_objects = ItemModel.objects.filter(user=request.user)
+    for option in option_objects:
+      options[option.id] = [option.item_name]
+    return JsonResponse(options) 
+  else:
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+  
+def sales_transaction(request,id):
+  staff_id = request.session['staff_id']
+  staff =  staff_details.objects.get(id=staff_id)
+  tr= sale_transaction.objects.get(sales_order=id)
+  context={'tr':tr,'staff':staff}
+  return render(request,'sale_transaction.html')

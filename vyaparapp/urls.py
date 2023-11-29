@@ -125,6 +125,9 @@ urlpatterns = [
     path('saleorder_view/<int:id>', views.saleorder_view, name='saleorder_view'),
     path('delete_saleorder/<int:id>', views.delete_saleorder, name='delete_saleorder'),
     path('import_excel', views.import_excel, name='import_excel'),
+    path('add_party', views.add_party, name='add_party'),
+    path('add_item', views.add_item, name='add_item'),
+    path('sales_transaction/<int:id>', views.sales_transaction, name='sales_transaction'),
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
     

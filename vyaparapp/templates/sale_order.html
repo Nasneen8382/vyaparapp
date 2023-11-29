@@ -178,6 +178,8 @@
                                     <th class="text-center fs-2">ACTION<span class="fa fa-filter ps-1 fs-1"></span>
                                     </th>
                                     <th class="text-center p-0 m-0"></th>
+                                    <th class="text-center p-0 m-0"></th>
+                                    <th class="text-center p-0 m-0"></th>
                                 </thead>
                                 <tbody>
                                     {% for i in sale %}
@@ -194,6 +196,8 @@
                                             class="{% if i.status == 'open' %}text-primary{% else %}text-success{% endif %} text-center">
                                             {{i.status}}</td>
                                         <td><a href="">{{i.action}}</a> </td>
+                                        <td class="text-secondary w-5">{{i.last}}</td>
+                                        <td>{{i.by.first_name}} {{i.by.last_name}}</td>
                                         <td>
                                             <div class="btn-group mb-1">
                                                 <button style="border: none;background: none;" type="button"
@@ -217,7 +221,7 @@
                                                                 style="padding-inline-start: 0.1rem;padding-inline-end:0.7rem ;"></span>
                                                             Delete</a></li>
                                                     <li><a class="dropdown-item fw-bold tb"
-                                                            href="{% url 'saleorder_view' i.id %}"><span
+                                                            href="{% url 'sales_transaction' i.id %}"><span
                                                                 class="fa fa-history pe-2 tg text-success"></span>History</a>
                                                     </li>
                                                 </ul>

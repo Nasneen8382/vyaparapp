@@ -149,7 +149,7 @@ class salesorder(models.Model):
 
     partyname = models.CharField(max_length=100,null=True)
     staff = models.ForeignKey(staff_details, on_delete=models.CASCADE,null=True,blank=True)
-    # comp = models.ForeignKey(company, on_delete=models.CASCADE,null=True,blank=True)
+    comp = models.ForeignKey(company, on_delete=models.CASCADE,null=True,blank=True)
     orderno = models.IntegerField(null=True)
     orderdate = models.DateField(null=True)
     duedate = models.DateField(null=True)
