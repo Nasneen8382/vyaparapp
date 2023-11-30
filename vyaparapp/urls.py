@@ -121,6 +121,7 @@ urlpatterns = [
     path('saleorder_create', views.saleorder_create, name='saleorder_create'),
     path('getparty', views.getparty, name='getparty'),
     path('getproduct', views.getproduct, name='getproduct'),
+    path('getacc', views.getacc, name='getacc'),
     path('create_saleorder', views.create_saleorder, name='create_saleorder'),
     path('saleorder_view/<int:id>', views.saleorder_view, name='saleorder_view'),
     path('delete_saleorder/<int:id>', views.delete_saleorder, name='delete_saleorder'),
@@ -128,6 +129,7 @@ urlpatterns = [
     path('add_party', views.add_party, name='add_party'),
     path('add_item', views.add_item, name='add_item'),
     path('sales_transaction/<int:id>', views.sales_transaction, name='sales_transaction'),
+    path('saleorder_edit/<int:id>', views.saleorder_edit, name='saleorder_edit'),
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
     

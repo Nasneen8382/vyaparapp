@@ -65,7 +65,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr></tr>
+                                    {% for i in tr %}
+                                    <tr>
+                                        <td>{{forloop.counter}}</td>
+                                        <td>{{i.date}}</td>
+                                        <td>{{i.staff.first_name}}</td>
+                                        <td class="{% if i.action == 'Created' %}text-danger{% else %}text-primary{% endif %}">{{i.action}}</td>
+                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>

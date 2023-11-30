@@ -158,6 +158,7 @@ class salesorder(models.Model):
     payment_method = models.CharField(max_length=100, default='cash')
     UPI = models.CharField(max_length=100,null=True)
     checkno = models.CharField(max_length=100,null=True)
+    accno = models.CharField(max_length=100,null=True)
     subtotal = models.CharField(max_length=100,null=True)
     IGST = models.CharField(max_length=100,null=True)
     CGST  =  models.CharField(max_length=100,null=True)
@@ -185,7 +186,9 @@ class salesorder(models.Model):
 class sales_item(models.Model):
     sale_order= models.ForeignKey(salesorder,on_delete=models.CASCADE,null=True)
     cmp = models.ForeignKey(company, on_delete=models.CASCADE,default='')
-    product = models.CharField(max_length=100,null=True)
+    # product1 = models.CharField(max_length=100,null=True)
+    product= models.ForeignKey(ItemModel,on_delete=models.CASCADE,null=True)
+
     hsn = models.CharField(max_length=100,null=True)
     # description = models.CharField(max_length=100, default='')
     qty = models.IntegerField(default=0, null=True)

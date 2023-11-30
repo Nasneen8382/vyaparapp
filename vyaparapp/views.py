@@ -1219,10 +1219,11 @@ def saleorder_create(request):
   cmp = staff.company
   par= party.objects.filter(company=staff.company)
   item = ItemModel.objects.filter(company=staff.company)
+  bnk = BankModel.objects.filter(company=cmp)
   order = salesorder.next_orderno()
   
   context={
-    'party':par,'item':item,'staff':staff,'order':order
+    'party':par,'item':item,'staff':staff,'order':order,'bnk':bnk
   }
   return render(request, 'saleorder_create.html',context)
 
@@ -1231,7 +1232,15 @@ def getparty(request):
     p_id = request.GET.get('id')
     print(p_id)
     par = party.objects.get(party_name=p_id)
-    data7 = {'email': par.email,'balance':par.openingbalance}
+    data7 = {'email': par.email,'balance':par.openingbalance,'payment':par.payment}
+    
+    print(data7)
+    return JsonResponse(data7)
+def getacc(request):
+    b_id = request.GET.get('id')
+    print(b_id)
+    par = BankModel.objects.get(id=b_id)
+    data7 = {'acc': par.account_num}
     
     print(data7)
     return JsonResponse(data7)
@@ -1298,8 +1307,10 @@ def create_saleorder(request):
 
     if payment == 'check':
       sale.checkno = request.POST.get('checkno')
-    else:
+    elif payment == 'upi':
       sale.UPI = request.POST.get('upiid')
+    elif payment != 'check' and payment != 'upi 'and payment != 'cash':
+      sale.accno = request.POST.get('accno')
     
     if pos == 'state':
       sale.CGST=request.POST.get('cgst')
@@ -1501,8 +1512,34 @@ def add_item(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
   
 def sales_transaction(request,id):
-  staff_id = request.session['staff_id']
-  staff =  staff_details.objects.get(id=staff_id)
-  tr= sale_transaction.objects.get(sales_order=id)
+  if 'staff_id' in request.session:
+    if request.session.has_key('staff_id'):
+      staff_id = request.session['staff_id']
+           
+    else:
+      return redirect('/')
+  staff =  staff_details.objects.get(id=staff_id)  
+  tr= sale_transaction.objects.filter(sales_order=id)
   context={'tr':tr,'staff':staff}
-  return render(request,'sale_transaction.html')
+  return render(request,'sale_transaction.html',context)
+
+
+def saleorder_edit(request,id):
+  if 'staff_id' in request.session:
+    if request.session.has_key('staff_id'):
+      staff_id = request.session['staff_id']
+           
+    else:
+      return redirect('/')
+  staff =  staff_details.objects.get(id=staff_id)
+  sale = salesorder.objects.get(id=id)
+  cmp = staff.company
+  par= party.objects.filter(company=staff.company)
+  item = ItemModel.objects.filter(company=staff.company)
+  sitem = sales_item.objects.filter(sale_order=sale)
+  bnk = BankModel.objects.filter(company=cmp)
+  
+  context={
+    'party':par,'item':item,'staff':staff,'bnk':bnk,'sale':sale,'sitem':sitem
+  }
+  return render(request, 'saleorder_edit.html',context)
