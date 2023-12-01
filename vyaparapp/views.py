@@ -1196,11 +1196,13 @@ def sale_order(request):
     else:
       return redirect('/')
   staff =  staff_details.objects.get(id=staff_id)
-  sale = salesorder.objects.filter(staff=staff)
+  sale = salesorder.objects.filter(comp=staff.company)
   for i in sale:
-      last = sale_transaction.objects.filter(staff=i.staff).latest('date')
-      i.last= last.action
-      i.by=last.staff
+      last_transaction = sale_transaction.objects.filter(sales_order=i).order_by('-date').first()
+      i.last= last_transaction.action
+      i.by=last_transaction.staff
+      print(last_transaction.action)
+      
       
 
   context={
@@ -1329,7 +1331,7 @@ def create_saleorder(request):
     discount = request.POST.getlist("discount[]")
     total = request.POST.getlist("total[]")
     salesorderid=salesorder.objects.get(id =sale.id)
-    print(len(product))
+    print(product)
     print(len(hsn))
     print(len(qty))
     print(len(price))
@@ -1339,8 +1341,9 @@ def create_saleorder(request):
       mapped = list(mapped)
       for ele in mapped:
         print(ele[0])
+        prod=ItemModel.objects.get(id=ele[0])
         salesorderAdd = sales_item(
-          product=ele[0],
+          product=prod,
           hsn=ele[1],
           qty=ele[2],
           price=ele[3],
@@ -1348,7 +1351,7 @@ def create_saleorder(request):
           discount=ele[5],
           total=ele[6],
           sale_order=salesorderid,
-          cmp=cmp
+          cmp=staff.company
             )
         salesorderAdd.save()
         print("item saved===================================")
@@ -1543,3 +1546,98 @@ def saleorder_edit(request,id):
     'party':par,'item':item,'staff':staff,'bnk':bnk,'sale':sale,'sitem':sitem
   }
   return render(request, 'saleorder_edit.html',context)
+
+
+
+
+@login_required(login_url='login')
+def edit_saleorder(request,id):
+  if 'staff_id' in request.session:
+    if request.session.has_key('staff_id'):
+      staff_id = request.session['staff_id']
+           
+    else:
+      return redirect('/')
+  staff =  staff_details.objects.get(id=staff_id)
+  if request.method == 'POST':
+    so = salesorder.objects.get(id=id)
+    
+    
+    so.partyname = request.POST.get('party')
+    so.orderno=request.POST.get('orderno')
+    so.orderdate=request.POST.get('orderdate')
+    so.duedate=request.POST.get('duedate')
+    
+    pos=request.POST.get('stateofsply')
+    if pos != '':
+      so.placeofsupply=pos
+      if pos == 'state':
+        so.CGST=request.POST.get('cgst')
+        so.SGST=request.POST.get('sgst')
+      elif pos == 'other state':
+        so.IGST=request.POST.get('igst')
+      
+    payment = request.POST.get('paymethode')
+    if payment != '':
+      so.payment_method=payment
+      if payment == 'check':
+        so.checkno = request.POST.get('checkno')
+      elif payment == 'upi':
+        so.UPI = request.POST.get('upiid')
+      elif payment != 'check' and payment != 'upi 'and payment != 'cash':
+        so.accno = request.POST.get('accno')
+        
+    if request.FILES.get('attach') != '':
+      so.file=request.FILES.get('attach')    
+    so.note=request.POST.get('note')
+    so.subtotal=request.POST.get('subtotal')
+    so.taxamount=request.POST.get('taxamount')
+    so.adjustment=request.POST.get('adj')
+    so.grandtotal=request.POST.get('grandtotal')
+    so.paid=request.POST.get('paid')
+    so.balance=request.POST.get('baldue')
+    
+    so.save()
+    print("updated===================================")
+    salesorderid=salesorder.objects.get(id =so.id)
+
+    
+    # product = request.POST.getlist("product[]")
+    # hsn  = request.POST.getlist("hsn[]")
+    # qty = request.POST.getlist("qty[]")
+    # price = request.POST.getlist("price[]")
+    # tax = request.POST.getlist("tax1[]")
+    # discount = request.POST.getlist("discount[]")
+    # total = request.POST.getlist("total[]")
+    # salesorderid=salesorder.objects.get(id =sale.id)
+    # print(len(product))
+    # print(len(hsn))
+    # print(len(qty))
+    # print(len(price))
+   
+    # if len(product)==len(hsn)==len(qty) ==len(price)==len(tax)==len(discount)==len(total):
+    #   mapped = zip(product, hsn, qty, price, tax, discount, total)
+    #   mapped = list(mapped)
+    #   for ele in mapped:
+    #     print(ele[0])
+    #     salesorderAdd = sales_item(
+    #       product=ele[0],
+    #       hsn=ele[1],
+    #       qty=ele[2],
+    #       price=ele[3],
+    #       tax=ele[4],
+    #       discount=ele[5],
+    #       total=ele[6],
+    #       sale_order=salesorderid,
+    #       cmp=cmp
+    #         )
+    #     salesorderAdd.save()
+      
+    tran= sale_transaction.objects.create(
+      sales_order=salesorderid,staff=staff,company=staff.company,action="Updated",date=date.today()
+    )
+    # tran.save()
+    
+    return redirect('sale_order')
+    
+  return redirect('sale_order')

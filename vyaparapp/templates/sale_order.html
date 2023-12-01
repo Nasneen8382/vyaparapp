@@ -196,7 +196,7 @@
                                             class="{% if i.status == 'open' %}text-primary{% else %}text-success{% endif %} text-center">
                                             {{i.status}}</td>
                                         <td><a href="">{{i.action}}</a> </td>
-                                        <td class="text-secondary w-5">{{i.last}}</td>
+                                        <td class="{% if i.last == 'Updated' %} text-secondary{% else %}  text-danger {% endif %} w-5">{{i.last}}</td>
                                         <td>{{i.by.first_name}} {{i.by.last_name}}</td>
                                         <td>
                                             <div class="btn-group mb-1">
