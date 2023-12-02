@@ -400,7 +400,7 @@
                                                                         <select name='product[]' id="product{{forloop.counter}}"
                                                                             style="margin-right: 0.5em;"
                                                                             class="form-control product border-secondary">
-                                                                            <option value=" " selected>{{i.product.item_name}}
+                                                                            <option value="{{i.product.id}}" selected>{{i.product.item_name}}
                                                                             </option>
 
                                                                             {% for i in item %}

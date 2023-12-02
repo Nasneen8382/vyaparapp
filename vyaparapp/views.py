@@ -1602,36 +1602,40 @@ def edit_saleorder(request,id):
     salesorderid=salesorder.objects.get(id =so.id)
 
     
-    # product = request.POST.getlist("product[]")
-    # hsn  = request.POST.getlist("hsn[]")
-    # qty = request.POST.getlist("qty[]")
-    # price = request.POST.getlist("price[]")
-    # tax = request.POST.getlist("tax1[]")
-    # discount = request.POST.getlist("discount[]")
-    # total = request.POST.getlist("total[]")
-    # salesorderid=salesorder.objects.get(id =sale.id)
-    # print(len(product))
-    # print(len(hsn))
-    # print(len(qty))
-    # print(len(price))
+    product = request.POST.getlist("product[]")
+    hsn  = request.POST.getlist("hsn[]")
+    qty = request.POST.getlist("qty[]")
+    price = request.POST.getlist("price[]")
+    tax = request.POST.getlist("tax1[]")
+    discount = request.POST.getlist("discount[]")
+    total = request.POST.getlist("total[]")
+    # salesorderid=salesorder.objects.get(id =so.id)
+    print(len(product))
+    print(len(hsn))
+    print(len(qty))
+    print(len(price))
+    
+    objects_to_delete = sales_item.objects.filter(sale_order=salesorderid)
+    objects_to_delete.delete()
    
-    # if len(product)==len(hsn)==len(qty) ==len(price)==len(tax)==len(discount)==len(total):
-    #   mapped = zip(product, hsn, qty, price, tax, discount, total)
-    #   mapped = list(mapped)
-    #   for ele in mapped:
-    #     print(ele[0])
-    #     salesorderAdd = sales_item(
-    #       product=ele[0],
-    #       hsn=ele[1],
-    #       qty=ele[2],
-    #       price=ele[3],
-    #       tax=ele[4],
-    #       discount=ele[5],
-    #       total=ele[6],
-    #       sale_order=salesorderid,
-    #       cmp=cmp
-    #         )
-    #     salesorderAdd.save()
+    if len(product)==len(hsn)==len(qty) ==len(price)==len(tax)==len(discount)==len(total):
+      mapped = zip(product, hsn, qty, price, tax, discount, total)
+      mapped = list(mapped)
+      for ele in mapped:
+        print(ele[0])
+        prod=ItemModel.objects.get(id=ele[0])
+        salesorderAdd = sales_item(
+          product=prod,
+          hsn=ele[1],
+          qty=ele[2],
+          price=ele[3],
+          tax=ele[4],
+          discount=ele[5],
+          total=ele[6],
+          sale_order=salesorderid,
+          cmp=staff.company
+            )
+        salesorderAdd.save()
       
     tran= sale_transaction.objects.create(
       sales_order=salesorderid,staff=staff,company=staff.company,action="Updated",date=date.today()
